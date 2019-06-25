@@ -25,7 +25,7 @@ public class Categoria {
 	private long idCategoria;
 	
 	@NotNull
-	@Size(min=3, max=20)
+	@Size(min = 3, max = 20)
 	@Getter @Setter
 	private String nome;
 
