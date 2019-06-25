@@ -5,6 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -13,17 +14,19 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
+@Table(name = "categoria")
 @EqualsAndHashCode
 public class Categoria {
 	
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Getter @Setter
 	@Column(name="Idcategoria")
-	private long idCategoria;
 	@Getter @Setter
+	private long idCategoria;
+	
 	@NotNull
-	@Size(min=3, max=50)
+	@Size(min=3, max=20)
+	@Getter @Setter
 	private String nome;
 
 }
