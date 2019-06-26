@@ -18,54 +18,58 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import lombok.Getter;
-import lombok.Setter;
-
 @ControllerAdvice
 public class ExceptionHandlerAlgamoney extends ResponseEntityExceptionHandler {
 
 	@Autowired
-	private MessageSource messages;
-
-	//Usado para tratar quando tem atributo que não está mapeado na aplicação.
+	private MessageSource messageSource;
+	
 	@Override
 	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
-		String mensagemUsuario = messages.getMessage("mensagem.invalida", null, LocaleContextHolder.getLocale());
+		
+		String mensagemUsuario = messageSource.getMessage("mensagem.invalida", null, LocaleContextHolder.getLocale());
 		String mensagemDesenvolvedor = ex.getCause().toString();
 		List<Erro> erros = Arrays.asList(new Erro(mensagemUsuario, mensagemDesenvolvedor));
-		// São mensagens que não consegui ler
 		return handleExceptionInternal(ex, erros, headers, HttpStatus.BAD_REQUEST, request);
 	}
 	
-	//Usado para tratar requisições onde os atributos vem notnull
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
+		
 		List<Erro> erros = criarListaDeErros(ex.getBindingResult());
 		return handleExceptionInternal(ex, erros, headers, HttpStatus.BAD_REQUEST, request);
 	}
-	//Biding result tem a lista de todos os erros
-	private List<Erro> criarListaDeErros(BindingResult bindingResult){
+	
+	private List<Erro> criarListaDeErros(BindingResult bindingResult) {
 		List<Erro> erros = new ArrayList<>();
-		for(FieldError fieldError:bindingResult.getFieldErrors()) {
-			String mensagemUsuario = messages.getMessage(fieldError, LocaleContextHolder.getLocale());
+		
+		for (FieldError fieldError : bindingResult.getFieldErrors()) {
+			String mensagemUsuario = messageSource.getMessage(fieldError, LocaleContextHolder.getLocale());
 			String mensagemDesenvolvedor = fieldError.toString();
 			erros.add(new Erro(mensagemUsuario, mensagemDesenvolvedor));
 		}
+			
 		return erros;
 	}
 	
 	public static class Erro {
 		
-		@Getter @Setter
 		private String mensagemUsuario;
-		@Getter @Setter
 		private String mensagemDesenvolvedor;
 		
-		public Erro(String mensagemUsuario, String mensagemDesenvolvedor){
-			this.mensagemDesenvolvedor = mensagemDesenvolvedor;
+		public Erro(String mensagemUsuario, String mensagemDesenvolvedor) {
 			this.mensagemUsuario = mensagemUsuario;
+			this.mensagemDesenvolvedor = mensagemDesenvolvedor;
+		}
+
+		public String getMensagemUsuario() {
+			return mensagemUsuario;
+		}
+
+		public String getMensagemDesenvolvedor() {
+			return mensagemDesenvolvedor;
 		}
 		
 	}
