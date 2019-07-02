@@ -53,10 +53,11 @@ public class CategoriaResource {
 	@PostMapping("/salvarcategoria")
 	public ResponseEntity<Categoria> salvarCategoria(@Valid @RequestBody Categoria categoria, HttpServletResponse response) {
 		Optional<Categoria> categ = categoriaRepository.findByNome(categoria.getNome());
-		publisher.publishEvent(new RecursoCriadoEvento(this, response, categoria.getIdCategoria()));
+		
 		if (categ.isEmpty()) {
 			categoriaRepository.save(categoria);
-			return ResponseEntity.ok(categoria);
+			publisher.publishEvent(new RecursoCriadoEvento(this, response, categoria.getIdCategoria()));
+			return ResponseEntity.status(HttpStatus.CREATED).body(categoria);
 		} else {
 			throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Categoria já cadastrada");
 		}

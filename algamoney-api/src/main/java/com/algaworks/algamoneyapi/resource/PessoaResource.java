@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -52,9 +53,10 @@ public class PessoaResource {
 	@PostMapping("/salvarpessoa")
 	public ResponseEntity<Pessoa> salvarPessoa(@Valid @RequestBody Pessoa pessoa, HttpServletResponse response) {
 		Optional<Pessoa> pess = pessoaRepository.findByNome(pessoa.getNome());
-		publisher.publishEvent(new RecursoCriadoEvento(this, response, pessoa.getIdPessoa()));
+		
 		if (pess.isEmpty()) {
 			pessoaRepository.save(pessoa);
+			publisher.publishEvent(new RecursoCriadoEvento(this, response, pessoa.getIdPessoa()));
 			return ResponseEntity.status(HttpStatus.CREATED).body(pessoa);
 		} else {
 			throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Pessoa já cadastrada");
@@ -76,6 +78,7 @@ public class PessoaResource {
 	}
 
 	@DeleteMapping("/deletarpessoa/{id}")
+	@ResponseStatus(value = HttpStatus.NO_CONTENT)
 	public void deletarPessoa(@PathVariable Long id) {
 		Optional<Pessoa> categ = pessoaRepository.findById(id);
 		if (!categ.isEmpty()) {
