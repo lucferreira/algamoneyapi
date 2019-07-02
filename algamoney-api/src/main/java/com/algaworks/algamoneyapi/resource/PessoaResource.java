@@ -3,10 +3,12 @@ package com.algaworks.algamoneyapi.resource;
 import java.util.List;
 import java.util.Optional;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.algaworks.algamoneyapi.event.RecursoCriadoEvento;
 import com.algaworks.algamoneyapi.model.Pessoa;
 import com.algaworks.algamoneyapi.repository.PessoaRepository;
 
@@ -28,6 +31,9 @@ public class PessoaResource {
 
 	@Autowired
 	private PessoaRepository pessoaRepository;
+
+	@Autowired
+	private ApplicationEventPublisher publisher;
 
 	@GetMapping
 	public List<Pessoa> listarPessoas() {
@@ -44,11 +50,12 @@ public class PessoaResource {
 	}
 
 	@PostMapping("/salvarpessoa")
-	public ResponseEntity<Pessoa> salvarPessoa(@Valid @RequestBody Pessoa pessoa) {
+	public ResponseEntity<Pessoa> salvarPessoa(@Valid @RequestBody Pessoa pessoa, HttpServletResponse response) {
 		Optional<Pessoa> pess = pessoaRepository.findByNome(pessoa.getNome());
+		publisher.publishEvent(new RecursoCriadoEvento(this, response, pessoa.getIdPessoa()));
 		if (pess.isEmpty()) {
 			pessoaRepository.save(pessoa);
-			return ResponseEntity.ok(pessoa);
+			return ResponseEntity.status(HttpStatus.CREATED).body(pessoa);
 		} else {
 			throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Pessoa já cadastrada");
 		}

@@ -3,10 +3,12 @@ package com.algaworks.algamoneyapi.resource;
 import java.util.List;
 import java.util.Optional;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.algaworks.algamoneyapi.event.RecursoCriadoEvento;
 import com.algaworks.algamoneyapi.model.Categoria;
 import com.algaworks.algamoneyapi.repository.CategoriaRespository;
 
@@ -28,6 +31,9 @@ public class CategoriaResource {
 
 	@Autowired
 	private CategoriaRespository categoriaRepository;
+	
+	@Autowired
+	private ApplicationEventPublisher publisher;
 
 	@GetMapping
 	public List<Categoria> listarCategorias() {
@@ -45,8 +51,9 @@ public class CategoriaResource {
 	}
 
 	@PostMapping("/salvarcategoria")
-	public ResponseEntity<Categoria> salvarCategoria(@Valid @RequestBody Categoria categoria) {
+	public ResponseEntity<Categoria> salvarCategoria(@Valid @RequestBody Categoria categoria, HttpServletResponse response) {
 		Optional<Categoria> categ = categoriaRepository.findByNome(categoria.getNome());
+		publisher.publishEvent(new RecursoCriadoEvento(this, response, categoria.getIdCategoria()));
 		if (categ.isEmpty()) {
 			categoriaRepository.save(categoria);
 			return ResponseEntity.ok(categoria);
