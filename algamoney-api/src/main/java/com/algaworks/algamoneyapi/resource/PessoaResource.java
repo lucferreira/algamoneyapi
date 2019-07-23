@@ -6,7 +6,6 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
@@ -25,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.algaworks.algamoneyapi.event.RecursoCriadoEvento;
 import com.algaworks.algamoneyapi.model.Pessoa;
 import com.algaworks.algamoneyapi.repository.PessoaRepository;
+import com.algaworks.algamoneyapi.service.PessoaService;
 
 @RestController
 @RequestMapping("/pessoas")
@@ -35,6 +35,9 @@ public class PessoaResource {
 
 	@Autowired
 	private ApplicationEventPublisher publisher;
+
+	@Autowired
+	private PessoaService pessoaService;
 
 	@GetMapping
 	public List<Pessoa> listarPessoas() {
@@ -53,7 +56,7 @@ public class PessoaResource {
 	@PostMapping("/salvarpessoa")
 	public ResponseEntity<Pessoa> salvarPessoa(@Valid @RequestBody Pessoa pessoa, HttpServletResponse response) {
 		Optional<Pessoa> pess = pessoaRepository.findByNome(pessoa.getNome());
-		
+
 		if (pess.isEmpty()) {
 			pessoaRepository.save(pessoa);
 			publisher.publishEvent(new RecursoCriadoEvento(this, response, pessoa.getIdPessoa()));
@@ -64,27 +67,28 @@ public class PessoaResource {
 
 	}
 
-	@PutMapping("/atualizarpessoa/{id}")
-	public Pessoa atualizarPessoa(@Valid @RequestBody Pessoa pessoa, @PathVariable Long id) {
-		Optional<Pessoa> pess = pessoaRepository.findById(id);
-		if (!pess.isEmpty()) {
-			BeanUtils.copyProperties(pessoa, pess);
-			pessoaRepository.save(pessoa);
-			return pessoa;
-		} else {
-			throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Categoria não encontrada");
-		}
+	@PutMapping("/atualizarpessoa/{idPessoa}")
+	public ResponseEntity<Pessoa> atualizarPessoa(@PathVariable Long idPessoa, @Valid @RequestBody Pessoa pessoa) {
+		Pessoa pessoaSalva = pessoaService.atualizar(idPessoa, pessoa);
+		return ResponseEntity.ok(pessoaSalva);
+
+	}
+	
+	@PutMapping("/atualizarpessoa/{idPessoa}/ativo")
+	@ResponseStatus(value = HttpStatus.NO_CONTENT)
+	public void atualizarPessoaParcial(@PathVariable Long idPessoa, @Valid @RequestBody Boolean ativo) {
+		pessoaService.atualizarPropriedadeAtivo(idPessoa, ativo);
 
 	}
 
 	@DeleteMapping("/deletarpessoa/{id}")
 	@ResponseStatus(value = HttpStatus.NO_CONTENT)
 	public void deletarPessoa(@PathVariable Long id) {
-		Optional<Pessoa> categ = pessoaRepository.findById(id);
-		if (!categ.isEmpty()) {
+		Optional<Pessoa> pess = pessoaRepository.findById(id);
+		if (!pess.isEmpty()) {
 			pessoaRepository.deleteById(id);
 		} else {
-			throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Categoria não encontrada");
+			throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Categoria não encontrada");
 		}
 	}
 }

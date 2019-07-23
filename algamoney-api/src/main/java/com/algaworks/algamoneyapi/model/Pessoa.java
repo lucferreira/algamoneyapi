@@ -22,7 +22,7 @@ public class Pessoa {
 	@Getter @Setter
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "idpessoa")
+	@Column(name = "Idpessoa")
 	private Long idPessoa;
 	@Getter @Setter
 	@NotNull
